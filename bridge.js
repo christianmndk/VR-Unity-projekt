@@ -30,23 +30,34 @@ io.sockets.on('connection', function (socket) {
 		isConnected = true;
 		oscServer = new osc.Server(obj.local.port, obj.local.host);
 		obj.remotes.map(c => {
+
 			let newClient = new osc.Client(c.host, c.port);
 			newClient.send('/status', socket.sessionId + ' connected');
-			oscClients.push(newClient);
+			// Make sure only one connection is made ever to the same server.
+			// We would not want to send the same message as many times as
+			// we have conneted to node in the browser
+			for (let i = 0; i < oscClients.length; i++) {
+				if (!c.host || !oscClients[i]) {
+					continue;
+				}
+				if (c.host + c.port == oscClients[i].host + oscClients[i].port) {
+					oscClients[i] = newClient;
+					console.log("Replaced existing client with new one");
+					return;
+				}
+			}
+			oscClients.push(newClient);	
 		});
 		oscServer.on('message', function (msg, rinfo) {
-			console.log("TO CONFIRM GLOBAL SHIT");
 			socket.emit("message", msg);
 		});
 		socket.emit("connected", 1);
 	});
     // Her får serveren en tekst besked fra klienten
 	socket.on("message", function (obj) {
-		console.log("WHAT EVEN IS JS")
 		console.log("server got message", obj);
         // Tekstbeskeden sendes med OSC til den port output er sat til
 		oscClients.map(c => {
-			console.log("HVAD ER DET DER SKER")
 			c.send.apply(c, obj);
 		});
 	});

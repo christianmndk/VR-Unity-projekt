@@ -27,14 +27,14 @@ let socket;
 let bridgeConfig = {
 	local: {
 		//Her sætter vi scriptet til at modtage OSC på localhost:11000
-		port: 11000,
+		port: 6448,
 		host: '127.0.0.1'
 	},
 	remotes: [{
 			//Unity modtager OSC på DEN IP ADRESSE DEN SIGER: 12000
 			name: "unity",
 			port: 12000,
-			host: '192.168.50.80' // Tilrettes efter hvad Unity-app'en fortæller
+			host: '192.168.50.173' // Tilrettes efter hvad Unity-app'en fortæller
 		},
 		{
 			//HVIS i har et processing skitse tilknyttet en ARDUINO skal I programmere den til at modtage OSC på port 10330
@@ -146,31 +146,6 @@ function receiveOsc(address, value) {
 
 	resultPre.html(address + "   " + value + '\n' + resultPre.html());
 
-	// Her løber vi alle slidere igennem
-	listeningSliders.map(s => {
-		// Hvis adressen svarer til sliderens adresse (fx wek/outputs)
-		if (address === s.address) {
-			// Hvis der er en værdi i value arrayet
-			if (value[s.index]) {
-
-				if (s.parseValue) {
-					value[s.index] = s.parseValue(value[s.index]);
-				}
-
-				// let sliderValue = map(value[s.index], 0.0, 1.0, s.slider.elt.min, s.slider.elt.max);
-				let sliderValue = map(value[s.index], 0.0, 1.0, -18000, 18000);
-				console.log("slider " + s.index + " got value", value[s.index] + " map returns " + sliderValue);
-				s.slider.elt.value = sliderValue;
-				var event = new Event('input', {
-					'bubbles': true,
-					'cancelable': true
-				});
-
-				s.slider.elt.dispatchEvent(event);
-
-			}
-		}
-	});
 
 }
 
@@ -184,11 +159,10 @@ function sendOsc(address, value) {
 	console.log(socket);
 }
 
-function setupOsc() {// Det betyder at i den mappe der hedder "/client" der ligger de filer som browsere må se
-
+function setupOsc() {
 	console.log("setup OSC")
 	socket = io.connect('http://127.0.0.1:8081', {
-		port: 8081,
+		port: 6448,
 		rememberTransport: false
 	});
 	socket.on('connect', function () {
@@ -199,7 +173,6 @@ function setupOsc() {// Det betyder at i den mappe der hedder "/client" der ligg
 		console.log("socket says we're conncted to osc", msg);
 	});
 	socket.on('message', function (msg) {
-		console.log("I DONT EVEN WANNA KNOW")
 		console.log("client socket got", msg);
 		if (msg[0] == '#bundle') {
 			for (var i = 2; i < msg.length; i++) {
