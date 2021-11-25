@@ -41,8 +41,8 @@ io.sockets.on('connection', function (socket) {
 					continue;
 				}
 				if (c.host + c.port == oscClients[i].host + oscClients[i].port) {
+					console.log(`${oscClients[i].host}:${oscClients[i].port} replaced`);
 					oscClients[i] = newClient;
-					console.log("Replaced existing client with new one");
 					return;
 				}
 			}

@@ -16,6 +16,7 @@ let containerSection;
 
 let socket;
 
+let tegnResived = [];
 
 //Vi sætter alle konfigurationsoplysninger i et array 
 //Lytter (fx på beskeder fra wekinator) på port 11000
@@ -34,7 +35,7 @@ let bridgeConfig = {
 			//Unity modtager OSC på DEN IP ADRESSE DEN SIGER: 12000
 			name: "unity",
 			port: 12000,
-			host: '192.168.50.173' // Tilrettes efter hvad Unity-app'en fortæller
+			host: '192.168.50.145' // Tilrettes efter hvad Unity-app'en fortæller
 		},
 		{
 			//HVIS i har et processing skitse tilknyttet en ARDUINO skal I programmere den til at modtage OSC på port 10330
@@ -45,7 +46,7 @@ let bridgeConfig = {
 		{
 			//HVIS i har et processing skitse tilknyttet WEKINATOR vil den modtage OSC på port 6448
 			name: "wekinator",
-			port: 6448,
+			port: 11000,
 			host: '192.168.8.105' // Tilrettes efter adressen på Wekinatorens adgang til netværket
 		}
 	]
@@ -83,17 +84,7 @@ function setup() {
 	unityHostInputField = createElement("p", arduinoConfig.host + ":" + arduinoConfig.port)
 		.parent(containerSection);*/
 
-	// Tekst besked
 
-	createElement("h3", "Tekstbesked til spiller")
-		.parent(containerSection);
-
-	textInput = createInput()
-		.parent(containerSection)
-		.changed((e) => {
-			console.log(textInput.value());
-			sendOsc("/text", textInput.value());
-		});
 
 	createElement("h3", "Højest mulige tal").parent(containerSection);
 
@@ -110,28 +101,15 @@ function setup() {
 				console.log("ikke rigtig nummer");
 		});
 
-	createElement("h3", "Rigtige ord").parent(containerSection);
 
-	woInput = createInput()
-		.parent(containerSection)
-		.changed((e) => {
-		console.log(woInput.value().toLowerCase());
-		if(woInput.value().toLowerCase()=="nut")
-		{
-			sendOsc("/wu", 1);
-			console.log("rigtige ord");
-		}
-		else
-			console.log("ikke rigtige ord");
-	});
 
 	
 	// Seneste OSC input
 
-	createElement("h3", "Seneste OSC Input")
+	createElement("h3", "tegn & tal fra labyreinten")
 		.parent(containerSection);
 
-	resultPre = createElement('pre', 'Intet input endnu')
+	resultPre = createElement('pre', ' ')
 		.parent(containerSection); // a div for the Hue hub's responses
 }
 
@@ -140,13 +118,16 @@ function setup() {
 */
 
 function receiveOsc(address, value) {
-	if (address.split('/')[1] === "wek") {
-		// besked fra Wekinator
+	let resived = address.split('/');
+	if (resived[1] === "re") {
+		console.log("you got a message");
+		console.log(resived[1]);
+		console.log(value);
+		tegnResived.push(value)
 	}
-
-	resultPre.html(address + "   " + value + '\n' + resultPre.html());
-
-
+	console.log("tegn resived "+ tegnResived.join(' '))
+	resultPre.html(tegnResived);
+	//resultPre.html(address + "   " + value + '\n' + resultPre.html());
 }
 
 function logOscInput(string) {
@@ -156,7 +137,7 @@ function logOscInput(string) {
 function sendOsc(address, value) {
 	console.log(`sending message: ${address}: ${value}`);
 	socket.emit('message', [address].concat(value));
-	console.log(socket);
+	//console.log(socket);
 }
 
 function setupOsc() {
